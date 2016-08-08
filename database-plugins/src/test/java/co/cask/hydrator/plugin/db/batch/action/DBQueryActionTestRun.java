@@ -62,6 +62,7 @@ public class DBQueryActionTestRun extends DatabasePluginTestBase {
         .put("connectionString", getConnectionURL())
         .put("jdbcPluginName", "hypersql")
         .put("query", "delete from \"actionTest\" where day = '${logicalStartTime(yyyy-MM-dd,0m,UTC)}'")
+        .put("runCondition", "success")
         .build(),
       null));
 
