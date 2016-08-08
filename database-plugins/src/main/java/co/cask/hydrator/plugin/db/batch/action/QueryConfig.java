@@ -18,63 +18,43 @@ package co.cask.hydrator.plugin.db.batch.action;
 
 import co.cask.cdap.api.annotation.Description;
 import co.cask.cdap.api.annotation.Macro;
+import co.cask.cdap.etl.api.batch.BatchActionContext;
+import co.cask.hydrator.common.batch.action.Condition;
+import co.cask.hydrator.common.batch.action.ConditionConfig;
 import co.cask.hydrator.plugin.ConnectionConfig;
-import co.cask.hydrator.plugin.DBManager;
-import org.slf4j.Logger;
 
-import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javax.annotation.Nullable;
 
 /**
- * General config for Actions whose purposes are to run database commands.
+ * Config for {@link QueryAction}.
  */
 public class QueryConfig extends ConnectionConfig {
-
-  public static final String JDBC_PLUGIN_ID = "driver";
 
   @Description("The query to run.")
   @Macro
   public String query;
 
+  @Nullable
+  @Description("When to run the action. Must be 'completion', 'success', or 'failure'. Defaults to 'success'. " +
+    "If set to 'completion', the action will be executed regardless of whether the pipeline run succeeded or failed." +
+    "If set to 'success', the action will only be executed if the pipeline run succeeded. " +
+    "If set to 'failure', the action will only be executed if the pipeline run failed.")
+  @Macro
+  public String runCondition;
+
   public QueryConfig() {
     super();
+    runCondition = Condition.SUCCESS.name();
   }
 
-  public void executeQuery(Class<? extends Driver> driverClass, Logger log, QueryConfig config) throws Exception {
-
-    DBManager dbManager = new DBManager(config);
-
-    try {
-      dbManager.ensureJDBCDriverIsAvailable(driverClass);
-
-      try (Connection connection = getConnection()) {
-        if (!config.enableAutoCommit) {
-          connection.setAutoCommit(false);
-        }
-        try (Statement statement = connection.createStatement()) {
-          statement.execute(config.query);
-          if (!config.enableAutoCommit) {
-            connection.commit();
-          }
-        }
-      }
-    } catch (Exception e) {
-      log.error("Error running query {}.", config.query, e);
-    } finally {
-      dbManager.destroy();
+  public void validate() {
+    // have to delegate instead of inherit, since we can't extend both ConditionConfig and ConnectionConfig.
+    if (!containsMacro("runCondition")) {
+      new ConditionConfig(runCondition).validate();
     }
   }
 
-  private Connection getConnection() throws SQLException {
-    if (this.user == null) {
-      return DriverManager.getConnection(this.connectionString);
-    } else {
-      return DriverManager.getConnection(this.connectionString, this.user, this.password);
-    }
+  public boolean shouldRun(BatchActionContext actionContext) {
+    return new ConditionConfig(runCondition).shouldRun(actionContext);
   }
-
-
 }
