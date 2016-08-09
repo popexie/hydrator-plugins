@@ -1,6 +1,5 @@
 package co.cask.hydrator.plugin.batch.action;
 
-import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.common.utils.Networks;
 import co.cask.hydrator.plugin.batch.ETLBatchTestBase;
 import co.cask.hydrator.plugin.common.EchoCommandFactory;
@@ -16,11 +15,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.python.google.common.base.Throwables;
 
-import java.security.KeyFactory;
 import java.security.PublicKey;
-import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Test for {@link SSHAction}
