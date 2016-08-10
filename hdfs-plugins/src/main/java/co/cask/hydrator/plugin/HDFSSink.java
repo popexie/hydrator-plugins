@@ -140,6 +140,7 @@ public class HDFSSink extends ReferenceBatchSink<StructuredRecord, Text, NullWri
     }
 
     private void validate() {
+      // if macro provided, timeSuffix will be null at configure time
       if (!Strings.isNullOrEmpty(timeSufix)) {
         new SimpleDateFormat(timeSufix);
       }
