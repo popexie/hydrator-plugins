@@ -69,6 +69,7 @@ public class HDFSSink extends ReferenceBatchSink<StructuredRecord, Text, NullWri
 
   @Override
   public void prepareRun(BatchSinkContext context) throws Exception {
+    // if user provided macro, need to still validate timeSuffix format
     config.validate();
     context.addOutput(Output.of(config.referenceName, new SinkOutputFormatProvider(config, context)));
   }
@@ -139,7 +140,7 @@ public class HDFSSink extends ReferenceBatchSink<StructuredRecord, Text, NullWri
     }
 
     private void validate() {
-      if (!containsMacro("timeSuffix") && !Strings.isNullOrEmpty(timeSufix)) {
+      if (!Strings.isNullOrEmpty(timeSufix)) {
         new SimpleDateFormat(timeSufix);
       }
     }
