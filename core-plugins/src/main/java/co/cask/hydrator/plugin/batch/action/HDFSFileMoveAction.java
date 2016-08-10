@@ -140,15 +140,15 @@ public class HDFSFileMoveAction extends Action {
    * Config class that contains all properties necessary to execute an HDFS move command.
    */
   public class HDFSActionConfig extends PluginConfig {
-    @Description("The full HDFS path of the file or directory that is to be moved. In the case of a directory, if" +
-      "fileRegex is set, then only files in the source directory matching the wildcard regex will be moved." +
+    @Description("The full HDFS path of the file or directory that is to be moved. In the case of a directory, if " +
+      "fileRegex is set, then only files in the source directory matching the wildcard regex will be moved. " +
       "Otherwise, all files in the directory will be moved. For example: hdfs://hostname/tmp")
     private String sourcePath;
 
-    @Description("The valid, full HDFS destination path in the same cluster where the file or files are to be moved." +
-      "For moving a single file, this means that all parent directories must already exist.For moving multiple files" +
-      " in a directory or an entire directory, the path to the desired directory is passed and that directory and " +
-      "all parent directories must already exist")
+    @Description("The valid, full HDFS destination path in the same cluster where the file or files are to be moved. " +
+      "For moving a single file, this means that all parent directories must already exist. For moving multiple " +
+      "files in a directory or an entire directory, the path to the desired directory is passed and that directory " +
+      "and all parent directories must already exist")
     private String destPath;
 
     @Description("Wildcard regular expression to filter the files in the source directory that will be moved")

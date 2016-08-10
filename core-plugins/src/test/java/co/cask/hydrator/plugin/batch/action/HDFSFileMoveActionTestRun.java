@@ -169,4 +169,46 @@ public class HDFSFileMoveActionTestRun extends ETLBatchTestBase {
     Assert.assertTrue(fileSystem.exists(new Path(outputDir.toUri().toString() + "/dest/test.txt")));
     Assert.assertFalse(fileSystem.exists(new Path(outputDir.toUri().toString() + "/dest/test.json")));
   }
+
+  @Test
+  public void testSingleFileHDFSAction() throws Exception {
+    //moves only test.txt from `/source` to `/dest`, which is also created during the Action process
+
+    Path outputDir = dfsCluster.getFileSystem().getHomeDirectory();
+
+    fileSystem.mkdirs(new Path("source"));
+    fileSystem.createNewFile(new Path("source/test.txt"));
+    fileSystem.createNewFile(new Path("source/test.json"));
+
+    ETLStage action = new ETLStage(
+      "HDFSFileMoveAction",
+      new ETLPlugin("HDFSFileMoveAction", Action.PLUGIN_TYPE,
+                    ImmutableMap.of("sourcePath", outputDir.toUri().toString() + "/source/test.txt",
+                                    "destPath", outputDir.toUri().toString() + "/dest/test.txt",
+                                    "fileRegex", ".*\\.txt",
+                                    "continueOnError", "false"),
+                    null));
+    ETLStage source = new ETLStage("source",
+                                   new ETLPlugin("KVTable", BatchSource.PLUGIN_TYPE,
+                                                 ImmutableMap.of("name", "hdfsTestSource"), null));
+    ETLStage sink = new ETLStage("sink", new ETLPlugin("KVTable", BatchSink.PLUGIN_TYPE,
+                                                       ImmutableMap.of("name", "hdfsTestSink"), null));
+    ETLBatchConfig etlConfig = ETLBatchConfig.builder("* * * * *")
+      .addStage(source)
+      .addStage(sink)
+      .addStage(action)
+      .addConnection(action.getName(), source.getName())
+      .addConnection(source.getName(), sink.getName())
+      .build();
+
+    AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(DATAPIPELINE_ARTIFACT, etlConfig);
+    Id.Application appId = Id.Application.from(Id.Namespace.DEFAULT, "hdfsActionTest");
+    ApplicationManager appManager = deployApplication(appId, appRequest);
+    WorkflowManager manager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    manager.start();
+    manager.waitForFinish(3, TimeUnit.MINUTES);
+
+    Assert.assertTrue(fileSystem.exists(new Path(outputDir.toUri().toString() + "/dest/test.txt")));
+    Assert.assertTrue(fileSystem.exists(new Path(outputDir.toUri().toString() + "/source/test.json")));
+  }
 }
